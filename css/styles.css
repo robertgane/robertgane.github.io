@@ -2,6 +2,10 @@ body, header, nav, main, footer, h1, div, img, ul {
     margin: 0;
 }
 
+p {
+    font-size: 2em;
+}
+
 header img {
     text-align: center;
     width: 40px;
@@ -38,10 +42,81 @@ nav a:hover {
     color: black;
 }
 
-body p {
-    padding-left: 30px;
-}
-
 main {
     padding-left: 30px;
+    padding-right: 30px;
+}
+
+main h2 {
+    font-size: 40px;
+}
+
+.contactus p {
+    margin: 0 30px 30px 30px;
+}
+
+.contactus p a {
+    padding: 5px;
+    border-radius: 5px;
+    background-color: red;
+    text-decoration: none;
+    color: white;
+    font-size: 20px;
+}
+
+.contactus p a:hover {
+    color: black;
+}
+
+.click-here a {
+    text-decoration: none;
+    color: red;
+}
+
+.contactus-button {
+    text-align: center;
+}
+
+.contactus-button a {
+    padding: 5px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: white;
+    background-color: red;
+}
+
+.picture2 img {
+    float: right;
+}
+
+.the-team h3 {
+    font-size: 25px;
+}
+
+.the-team {
+    clear: left;
+}
+
+main h3 {
+    font-size: 25px;
+}
+
+main img {
+    width: 50%;
+    float: left;
+    margin-left: 50px;
+    margin-right: 20px;
+}
+
+footer {
+    clear: both;
+    text-align: center;
+    color: white;
+    background-color: red;
+    padding: 30px 0;
+}
+
+footer p {
+    margin: 0;
+    font-weight: bolder;
 }
