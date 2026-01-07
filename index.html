@@ -79,10 +79,19 @@
   let state = Array.from({ length: size }, () => Array(size).fill(null));
 
   function setupPieces() {
-    for (let c = 0; c < 5; c++) {
-      state[0][c] = "W";
-      state[4][c] = "B";
-    }
+    // Player 1 (White)
+    state[0][0] = "W"; // a1
+    state[4][1] = "W"; // b5
+    state[0][2] = "W"; // c1
+    state[4][3] = "W"; // d5
+    state[0][4] = "W"; // e1
+
+    // Player 2 (Black)
+    state[4][0] = "B"; // a5
+    state[0][1] = "B"; // b1
+    state[4][2] = "B"; // c5
+    state[0][3] = "B"; // d1
+    state[4][4] = "B"; // e5
   }
 
   function drawBoard() {
@@ -164,12 +173,15 @@
 
   function isValidMove(r1, c1, r2, c2) {
     if (state[r2][c2]) return false;
-    const dr = Math.sign(r2 - r1);
-    const dc = Math.sign(c2 - c1);
+
     if (
-      r1 !== r2 && c1 !== c2 &&
+      r1 !== r2 &&
+      c1 !== c2 &&
       Math.abs(r2 - r1) !== Math.abs(c2 - c1)
     ) return false;
+
+    const dr = Math.sign(r2 - r1);
+    const dc = Math.sign(c2 - c1);
 
     let r = r1 + dr;
     let c = c1 + dc;
@@ -188,17 +200,17 @@
   }
 
   function checkWin(player) {
-    const lines = [
-      [1,0], [0,1], [1,1], [1,-1]
-    ];
+    const directions = [[1,0],[0,1],[1,1],[1,-1]];
 
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (state[r][c] !== player) continue;
-        for (const [dr, dc] of lines) {
+
+        for (const [dr, dc] of directions) {
           let count = 1;
           let nr = r + dr;
           let nc = c + dc;
+
           while (
             nr >= 0 && nr < size &&
             nc >= 0 && nc < size &&
