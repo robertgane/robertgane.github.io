@@ -61,6 +61,16 @@
     background: var(--accent) !important;
   }
 
+  .cell.invalid {
+  animation: invalidFlash 0.3s;
+}
+
+@keyframes invalidFlash {
+  0% { background-color: #f44336; } /* red flash */
+  50% { background-color: inherit; }
+  100% { background-color: inherit; }
+}
+
   .cell.selected {
     box-shadow: inset 0 0 0 3px var(--gold);
   }
@@ -215,9 +225,15 @@
 
       return; // exit early to avoid re-drawing twice
     }
-    // Clicked an invalid cell → deselect
+    // Clicked an invalid cell → deselect and flash red
     else {
       selected = null;
+
+      const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+      if (cell) {
+        cell.classList.add("invalid");
+        setTimeout(() => cell.classList.remove("invalid"), 300);
+      }
     }
   } 
   // No selection yet → select if it’s the player’s queen
