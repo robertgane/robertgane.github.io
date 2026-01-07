@@ -58,6 +58,15 @@
   .light { background: var(--light); }
   .dark { background: #9fa0a5; }
 
+  /* ===== SPECIAL TILES ===== */
+  .cell.red-tile {
+    background: #b71c1c !important;
+  }
+
+  .cell.black-tile {
+    background: #000000 !important;
+  }
+
   .cell.highlight {
     background: var(--accent) !important;
   }
@@ -66,7 +75,6 @@
     box-shadow: inset 0 0 0 3px var(--gold);
   }
 
-  /* ===== QUEEN STYLING ===== */
   .queen {
     width: 70%;
     height: 70%;
@@ -91,17 +99,16 @@
     background: linear-gradient(145deg, #111, #444);
   }
 
-  /* Hover glow */
   .queen:hover {
     box-shadow: 0 0 15px 4px rgba(255, 255, 0, 0.7), 0 6px 12px rgba(0,0,0,0.4);
     transform: scale(1.1);
   }
 
-  /* Bounce animation for selected piece */
   @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
   }
+
   .cell.selected .queen {
     animation: bounce 0.6s infinite;
   }
@@ -133,14 +140,12 @@
     }
   }
 
-  /* ===== INVALID CLICK FLASH ===== */
   .cell.invalid::after {
     content: "";
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
+    inset: 0;
     background-color: rgba(244,67,54,0.5);
     pointer-events: none;
-    border-radius: inherit;
     animation: invalidFlash 0.5s ease forwards;
   }
 
@@ -178,14 +183,12 @@
   function initState() {
     state = Array.from({ length: size }, () => Array(size).fill(null));
 
-    // White
     state[0][0] = "W";
     state[4][1] = "W";
     state[0][2] = "W";
     state[4][3] = "W";
     state[0][4] = "W";
 
-    // Black
     state[4][0] = "B";
     state[0][1] = "B";
     state[4][2] = "B";
@@ -195,12 +198,33 @@
 
   function drawBoard() {
     board.innerHTML = "";
+
+    const redTiles = [
+      [4,0], [4,2], [4,4],
+      [0,1], [0,3],
+      [2,4]
+    ];
+
+    const blackTiles = [
+      [4,1], [4,3],
+      [0,0], [0,2], [0,4],
+      [2,0]
+    ];
+
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         const cell = document.createElement("div");
         cell.className = "cell " + ((r + c) % 2 ? "dark" : "light");
         cell.dataset.r = r;
         cell.dataset.c = c;
+
+        if (redTiles.some(([rr,cc]) => rr === r && cc === c)) {
+          cell.classList.add("red-tile");
+        }
+
+        if (blackTiles.some(([rr,cc]) => rr === r && cc === c)) {
+          cell.classList.add("black-tile");
+        }
 
         if (state[r][c]) {
           const q = document.createElement("div");
@@ -223,18 +247,13 @@
 
     if (selected) {
       if (selected.r === r && selected.c === c) {
-        // Deselect
         selected = null;
         drawBoard();
-      }
-      else if (cellValue === currentPlayer) {
-        // Switch selection
+      } else if (cellValue === currentPlayer) {
         selected = { r, c };
         drawBoard();
         highlightMoves(r, c);
-      }
-      else if (isValidMove(selected.r, selected.c, r, c)) {
-        // Valid move
+      } else if (isValidMove(selected.r, selected.c, r, c)) {
         moveQueen(selected.r, selected.c, r, c);
         selected = null;
         drawBoard();
@@ -251,22 +270,16 @@
               currentPlayer === "W" ? "White’s Turn" : "Black’s Turn";
           }
         }, 30);
-      }
-      else {
-        // Invalid square → flash red, keep selection
-        if (cell) {
-          cell.classList.add("invalid");
-          setTimeout(() => cell.classList.remove("invalid"), 500);
-        }
+      } else {
+        cell.classList.add("invalid");
+        setTimeout(() => cell.classList.remove("invalid"), 500);
       }
     } else {
       if (cellValue === currentPlayer) {
-        // Select piece
         selected = { r, c };
         drawBoard();
         highlightMoves(r, c);
-      } else if (cell) {
-        // Invalid click on empty/enemy → flash red
+      } else {
         cell.classList.add("invalid");
         setTimeout(() => cell.classList.remove("invalid"), 500);
       }
