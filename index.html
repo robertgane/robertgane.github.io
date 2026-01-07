@@ -180,38 +180,50 @@
   }
 
   function handleTap(r, c) {
-    if (gameOver) return;
+  if (gameOver) return;
 
-    if (selected) {
-      if (isValidMove(selected.r, selected.c, r, c)) {
-        moveQueen(selected.r, selected.c, r, c);
-        selected = null;
+  const cellValue = state[r][c];
 
-        // Render final move first
-        drawBoard();
-
-        // Delay win check to allow browser to show move
-        setTimeout(() => {
-          if (checkWin(currentPlayer)) {
-            message.textContent =
-              (currentPlayer === "W" ? "White" : "Black") + " wins! 🎉";
-            gameOver = true;
-            resetBtn.style.display = "inline-block";
-          } else {
-            currentPlayer = currentPlayer === "W" ? "B" : "W";
-            turnText.textContent =
-              currentPlayer === "W" ? "White’s Turn" : "Black’s Turn";
-          }
-        }, 30);
-
-      }
-    } else if (state[r][c] === currentPlayer) {
+  if (selected) {
+    // Clicked the same piece → deselect
+    if (selected.r === r && selected.c === c) {
+      selected = null;
+    }
+    // Clicked a different piece of the same player → switch selection
+    else if (cellValue === currentPlayer) {
       selected = { r, c };
     }
+    // Clicked a valid empty cell → move
+    else if (isValidMove(selected.r, selected.c, r, c)) {
+      moveQueen(selected.r, selected.c, r, c);
+      selected = null;
 
-    drawBoard();
-    if (selected) highlightMoves(selected.r, selected.c);
+      drawBoard();
+
+      setTimeout(() => {
+        if (checkWin(currentPlayer)) {
+          message.textContent =
+            (currentPlayer === "W" ? "White" : "Black") + " wins! 🎉";
+          gameOver = true;
+          resetBtn.style.display = "inline-block";
+        } else {
+          currentPlayer = currentPlayer === "W" ? "B" : "W";
+          turnText.textContent =
+            currentPlayer === "W" ? "White’s Turn" : "Black’s Turn";
+        }
+      }, 30);
+
+      return; // exit early to avoid re-drawing twice
+    }
+  } 
+  // No selection yet → select if it’s the player’s queen
+  else if (cellValue === currentPlayer) {
+    selected = { r, c };
   }
+
+  drawBoard();
+  if (selected) highlightMoves(selected.r, selected.c);
+}
 
   function highlightMoves(r, c) {
     const dirs = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
