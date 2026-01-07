@@ -1,41 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Queens Puzzle Game</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #f5f5f5;
+  }
+  h1 {
+    margin-top: 20px;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(8, 60px);
+    grid-template-rows: repeat(8, 60px);
+    margin: 20px auto;
+    border: 3px solid #333;
+  }
+  .cell {
+    width: 60px;
+    height: 60px;
+    font-size: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .white {
+    background: #eee;
+  }
+  .black {
+    background: #999;
+  }
+  .conflict {
+    background: #ff6b6b !important;
+  }
+  #message {
+    font-size: 18px;
+    margin-top: 10px;
+  }
+</style>
+</head>
 <body>
-    <head>
-        <link rel="stylesheet" href="css/styles.css">
-    </head>
-    <header>
-        <h1><img src="img/heartlogo.jpg" alt="heart logo"><a href="index.html">Life Ring</a></h1>
-        <nav>
-            <a href="index.html">HOME</a> |
-            <a href="team.html">THE TEAM</a> |
-            <a href="contact.html">CONTACT US</a>
-        </nav>
-    </header>
-    <main>
-        <h2>Welcome To Life Ring</h2>
-        <img src="img/black-ring2.jpg" alt="black ring">   
-        <div class="our-mission">
-            <h3>OUR MISSION</h3>
-            <p>To help people in need who are seeking a device that can monitor their heart at more affordable prices, whilst still maintaining top quality service with easy to read measurements that can be accessed through their mobile phones.</p>
-        </div>
-        <div class="picture2">
-            <img src="img/black-ring.jpg" alt="life ring">
-        </div>
-        <div class="the-team">
-            <h3>THE TEAM BEHIND LIFE RING</h3>
-            <p>Our team of engineerers, software developers and the many others who have provided their expertise and skills have now made it possible for people to wear a heart monitor and to be provided crucial information that could be life saving.</p>
-        </div>
-        <div class="click-here">
-            <p><a href="team.html">Click Here</a> to find out more about the team behind life ring.</p>
-        </div>
-        <br>
-        <div class="contactus-button">
-            <h3><a href="contact.html">CONTACT US</a></h3>
-        </div>
-    </main>
-    <footer>
-        <p>&copy; 2025 Life Ring</p>
-    </footer>
+
+<h1>👑 Queens Puzzle</h1>
+<p>Place 8 queens so none attack each other.</p>
+
+<div id="board"></div>
+<div id="message"></div>
+
+<script>
+  const boardSize = 8;
+  const board = document.getElementById("board");
+  const message = document.getElementById("message");
+  let queens = [];
+
+  function createBoard() {
+    for (let row = 0; row < boardSize; row++) {
+      for (let col = 0; col < boardSize; col++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.classList.add((row + col) % 2 === 0 ? "white" : "black");
+        cell.dataset.row = row;
+        cell.dataset.col = col;
+        cell.addEventListener("click", () => toggleQueen(row, col, cell));
+        board.appendChild(cell);
+      }
+    }
+  }
+
+  function toggleQueen(row, col, cell) {
+    const index = queens.findIndex(q => q.row === row && q.col === col);
+
+    if (index >= 0) {
+      queens.splice(index, 1);
+      cell.textContent = "";
+    } else {
+      queens.push({ row, col });
+      cell.textContent = "♕";
+    }
+
+    updateConflicts();
+    checkWin();
+  }
+
+  function updateConflicts() {
+    document.querySelectorAll(".cell").forEach(c => c.classList.remove("conflict"));
+
+    queens.forEach((q1, i) => {
+      queens.forEach((q2, j) => {
+        if (i !== j) {
+          if (
+            q1.row === q2.row ||
+            q1.col === q2.col ||
+            Math.abs(q1.row - q2.row) === Math.abs(q1.col - q2.col)
+          ) {
+            markConflict(q1);
+            markConflict(q2);
+          }
+        }
+      });
+    });
+  }
+
+  function markConflict(q) {
+    const cell = document.querySelector(
+      `.cell[data-row="${q.row}"][data-col="${q.col}"]`
+    );
+    cell.classList.add("conflict");
+  }
+
+  function checkWin() {
+    if (queens.length !== 8) {
+      message.textContent = "";
+      return;
+    }
+
+    const hasConflict = document.querySelector(".conflict");
+    if (!hasConflict) {
+      message.textContent = "🎉 You solved the puzzle! 🎉";
+    } else {
+      message.textContent = "";
+    }
+  }
+
+  createBoard();
+</script>
+
 </body>
 </html>
