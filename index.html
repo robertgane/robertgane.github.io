@@ -3,175 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Queens Puzzle Mobile</title>
+<title>Queens – 4 in a Row</title>
 
 <style>
   body {
     margin: 0;
-    padding: 0;
     font-family: system-ui, Arial, sans-serif;
     background: #111;
-    color: #fff;
+    color: white;
     text-align: center;
   }
 
   h1 {
-    margin: 12px 0 4px;
-    font-size: 1.6rem;
+    margin: 10px 0 4px;
   }
 
-  p {
-    margin: 4px 0 10px;
-    font-size: 0.95rem;
-    opacity: 0.9;
+  #turn {
+    margin-bottom: 6px;
+    font-size: 1rem;
   }
 
   #board {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     width: 90vmin;
     height: 90vmin;
     max-width: 360px;
     max-height: 360px;
-    margin: 10px auto;
-    border: 3px solid #fff;
+    margin: auto;
+    border: 3px solid white;
   }
 
   .cell {
     display: flex;
-    align-items: center;
     justify-content: center;
-    font-size: 6vmin;
+    align-items: center;
+    font-size: 7vmin;
     user-select: none;
   }
 
-  .white {
-    background: #f0f0f0;
-    color: #000;
+  .light { background: #eee; color: black; }
+  .dark { background: #777; color: black; }
+
+  .highlight {
+    background: #4caf50 !important;
   }
 
-  .black {
-    background: #777;
-    color: #000;
-  }
-
-  .conflict {
-    background: #ff4d4d !important;
-    color: #000;
+  .selected {
+    outline: 3px solid gold;
   }
 
   #message {
-    margin-top: 10px;
+    margin-top: 8px;
     font-size: 1.1rem;
-    min-height: 1.4em;
-  }
-
-  button {
-    margin-top: 10px;
-    padding: 10px 18px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 6px;
-    background: #4caf50;
-    color: white;
   }
 </style>
 </head>
 
 <body>
 
-<h1>👑 Queens Puzzle</h1>
-<p>Place 8 queens without attacking each other</p>
-
+<h1>👑 Queens</h1>
+<div id="turn">White’s Turn</div>
 <div id="board"></div>
-
 <div id="message"></div>
-<button onclick="resetGame()">Reset</button>
 
 <script>
-  const boardSize = 8;
+  const size = 5;
   const board = document.getElementById("board");
+  const turnText = document.getElementById("turn");
   const message = document.getElementById("message");
-  let queens = [];
 
-  function createBoard() {
+  let currentPlayer = "W";
+  let selected = null;
+
+  let state = Array.from({ length: size }, () => Array(size).fill(null));
+
+  function setupPieces() {
+    for (let c = 0; c < 5; c++) {
+      state[0][c] = "W";
+      state[4][c] = "B";
+    }
+  }
+
+  function drawBoard() {
     board.innerHTML = "";
-    queens = [];
-    message.textContent = "";
-
-    for (let row = 0; row < boardSize; row++) {
-      for (let col = 0; col < boardSize; col++) {
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
         const cell = document.createElement("div");
-        cell.className = "cell " + ((row + col) % 2 === 0 ? "white" : "black");
-        cell.dataset.row = row;
-        cell.dataset.col = col;
+        cell.className = "cell " + ((r + c) % 2 ? "dark" : "light");
+        cell.dataset.r = r;
+        cell.dataset.c = c;
 
-        cell.addEventListener("touchstart", () => toggleQueen(row, col, cell));
-        cell.addEventListener("click", () => toggleQueen(row, col, cell));
-
-        board.appendChild(cell);
-      }
-    }
-  }
-
-  function toggleQueen(row, col, cell) {
-    const index = queens.findIndex(q => q.row === row && q.col === col);
-
-    if (index >= 0) {
-      queens.splice(index, 1);
-      cell.textContent = "";
-    } else {
-      queens.push({ row, col });
-      cell.textContent = "♕";
-    }
-
-    updateConflicts();
-    checkWin();
-  }
-
-  function updateConflicts() {
-    document.querySelectorAll(".cell").forEach(c =>
-      c.classList.remove("conflict")
-    );
-
-    for (let i = 0; i < queens.length; i++) {
-      for (let j = i + 1; j < queens.length; j++) {
-        const q1 = queens[i];
-        const q2 = queens[j];
-
-        if (
-          q1.row === q2.row ||
-          q1.col === q2.col ||
-          Math.abs(q1.row - q2.row) === Math.abs(q1.col - q2.col)
-        ) {
-          markConflict(q1);
-          markConflict(q2);
+        if (state[r][c]) {
+          cell.textContent = state[r][c] === "W" ? "♕" : "♛";
         }
-      }
-    }
-  }
 
-  function markConflict(q) {
-    const cell = document.querySelector(
-      `.cell[data-row="${q.row}"][data-col="${q.col}"]`
-    );
-    cell.classList.add("conflict");
-  }
-
-  function checkWin() {
-    if (queens.length === 8 && !document.querySelector(".conflict")) {
-      message.textContent = "🎉 You solved it!";
-    } else {
-      message.textContent = "";
-    }
-  }
-
-  function resetGame() {
-    createBoard();
-  }
-
-  createBoard();
-</script>
-
-</body>
-</html>
+        cell.onclick = () => handleTap(r, c);
+        board.appendChild(cell);
