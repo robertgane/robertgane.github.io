@@ -120,10 +120,10 @@
     content: "";
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(244,67,54,0.5); /* semi-transparent red overlay */
+    background-color: rgba(244,67,54,0.5);
     pointer-events: none;
-    animation: invalidFlash 0.3s;
     border-radius: inherit;
+    animation: invalidFlash 0.3s forwards;
   }
 
   @keyframes invalidFlash {
@@ -136,7 +136,7 @@
 
 <body>
 
-<h1>Adam & Robbie's 👑 Queens</h1>
+<h1>👑 Queens</h1>
 <div id="turn">White’s Turn</div>
 
 <div id="board"></div>
@@ -154,7 +154,6 @@
   let currentPlayer = "W";
   let selected = null;
   let gameOver = false;
-
   let state;
 
   function initState() {
@@ -201,21 +200,24 @@
     if (gameOver) return;
 
     const cellValue = state[r][c];
+    const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
 
     if (selected) {
-      // Clicked the same piece → deselect
+      // Deselect if clicking same piece
       if (selected.r === r && selected.c === c) {
         selected = null;
+        drawBoard();
       }
-      // Clicked a different piece of the same player → switch selection
+      // Switch selection to another of your pieces
       else if (cellValue === currentPlayer) {
         selected = { r, c };
+        drawBoard();
+        highlightMoves(r, c);
       }
-      // Clicked a valid empty cell → move
+      // Valid move
       else if (isValidMove(selected.r, selected.c, r, c)) {
         moveQueen(selected.r, selected.c, r, c);
         selected = null;
-
         drawBoard();
 
         setTimeout(() => {
@@ -230,26 +232,28 @@
               currentPlayer === "W" ? "White’s Turn" : "Black’s Turn";
           }
         }, 30);
-
-        return; // exit early to avoid re-drawing twice
       }
-      // Clicked an invalid cell → deselect and flash red
+      // Invalid click → flash red
       else {
         selected = null;
-        const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
         if (cell) {
           cell.classList.add("invalid");
           setTimeout(() => cell.classList.remove("invalid"), 300);
         }
+        // Do NOT redraw the board here — keep the cell in DOM for animation
       }
-    } 
-    // No selection yet → select if it’s the player’s queen
-    else if (cellValue === currentPlayer) {
+    } else if (cellValue === currentPlayer) {
+      // Select piece
       selected = { r, c };
+      drawBoard();
+      highlightMoves(r, c);
+    } else {
+      // Clicked empty or enemy cell with no selection → invalid flash
+      if (cell) {
+        cell.classList.add("invalid");
+        setTimeout(() => cell.classList.remove("invalid"), 300);
+      }
     }
-
-    drawBoard();
-    if (selected) highlightMoves(selected.r, selected.c);
   }
 
   function highlightMoves(r, c) {
