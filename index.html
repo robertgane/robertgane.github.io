@@ -66,26 +66,28 @@
     box-shadow: inset 0 0 0 3px var(--gold);
   }
 
+  /* ===== QUEEN STYLING ===== */
   .queen {
-    width: 60%;
-    height: 60%;
-    border-radius: 50%;
+    width: 70%;
+    height: 70%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 2rem;
     font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+    border-radius: 50%;
     box-shadow: 0 6px 12px rgba(0,0,0,0.4);
   }
 
   .whiteQ {
+    color: #ffffff;
     background: linear-gradient(145deg, #ffffff, #dcdcdc);
-    color: #111;
   }
 
   .blackQ {
+    color: #000;
     background: linear-gradient(145deg, #111, #444);
-    color: #fff;
   }
 
   #message {
@@ -115,7 +117,7 @@
     }
   }
 
-  /* ===== SMOOTH INVALID FLASH ===== */
+  /* ===== INVALID CLICK FLASH ===== */
   .cell.invalid::after {
     content: "";
     position: absolute;
@@ -137,7 +139,7 @@
 
 <body>
 
-<h1>Adams👑Queens Game</h1>
+<h1>👑 Queens</h1>
 <div id="turn">White’s Turn</div>
 
 <div id="board"></div>
@@ -187,7 +189,7 @@
         if (state[r][c]) {
           const q = document.createElement("div");
           q.className = "queen " + (state[r][c] === "W" ? "whiteQ" : "blackQ");
-          q.textContent = "Q";
+          q.textContent = state[r][c] === "W" ? "♕" : "♛"; // Unicode queens
           cell.appendChild(q);
         }
 
@@ -235,12 +237,12 @@
         }, 30);
       }
       else {
-        // Invalid square → flash red, but keep selection
+        // Invalid square → flash red, keep selection
         if (cell) {
-            cell.classList.add("invalid");
-            setTimeout(() => cell.classList.remove("invalid"), 500);
-            }
+          cell.classList.add("invalid");
+          setTimeout(() => cell.classList.remove("invalid"), 500);
         }
+      }
     } else {
       if (cellValue === currentPlayer) {
         // Select piece
@@ -249,10 +251,8 @@
         highlightMoves(r, c);
       } else if (cell) {
         // Invalid click on empty/enemy → flash red
-        if (cell) {
-          cell.classList.add("invalid");
-          setTimeout(() => cell.classList.remove("invalid"), 500);
-        }
+        cell.classList.add("invalid");
+        setTimeout(() => cell.classList.remove("invalid"), 500);
       }
     }
   }
