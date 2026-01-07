@@ -52,6 +52,7 @@
     justify-content: center;
     user-select: none;
     transition: background 0.15s ease;
+    position: relative;
   }
 
   .light { background: var(--light); }
@@ -112,16 +113,24 @@
     :root {
       --board-size: 90vmin;
     }
+  }
 
-  .cell.invalid {
-  animation: invalidFlash 0.3s;
-}
+  /* ===== INVALID CELL FLASH ===== */
+  .cell.invalid::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(244,67,54,0.5); /* semi-transparent red overlay */
+    pointer-events: none;
+    animation: invalidFlash 0.3s;
+    border-radius: inherit;
+  }
 
-@keyframes invalidFlash {
-  0% { background-color: #f44336; } /* red flash */
-  50% { background-color: inherit; }
-  100% { background-color: inherit; }
-}
+  @keyframes invalidFlash {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
 </style>
 </head>
 
@@ -189,60 +198,59 @@
   }
 
   function handleTap(r, c) {
-  if (gameOver) return;
+    if (gameOver) return;
 
-  const cellValue = state[r][c];
+    const cellValue = state[r][c];
 
-  if (selected) {
-    // Clicked the same piece → deselect
-    if (selected.r === r && selected.c === c) {
-      selected = null;
-    }
-    // Clicked a different piece of the same player → switch selection
+    if (selected) {
+      // Clicked the same piece → deselect
+      if (selected.r === r && selected.c === c) {
+        selected = null;
+      }
+      // Clicked a different piece of the same player → switch selection
+      else if (cellValue === currentPlayer) {
+        selected = { r, c };
+      }
+      // Clicked a valid empty cell → move
+      else if (isValidMove(selected.r, selected.c, r, c)) {
+        moveQueen(selected.r, selected.c, r, c);
+        selected = null;
+
+        drawBoard();
+
+        setTimeout(() => {
+          if (checkWin(currentPlayer)) {
+            message.textContent =
+              (currentPlayer === "W" ? "White" : "Black") + " wins! 🎉";
+            gameOver = true;
+            resetBtn.style.display = "inline-block";
+          } else {
+            currentPlayer = currentPlayer === "W" ? "B" : "W";
+            turnText.textContent =
+              currentPlayer === "W" ? "White’s Turn" : "Black’s Turn";
+          }
+        }, 30);
+
+        return; // exit early to avoid re-drawing twice
+      }
+      // Clicked an invalid cell → deselect and flash red
+      else {
+        selected = null;
+        const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+        if (cell) {
+          cell.classList.add("invalid");
+          setTimeout(() => cell.classList.remove("invalid"), 300);
+        }
+      }
+    } 
+    // No selection yet → select if it’s the player’s queen
     else if (cellValue === currentPlayer) {
       selected = { r, c };
     }
-    // Clicked a valid empty cell → move
-    else if (isValidMove(selected.r, selected.c, r, c)) {
-      moveQueen(selected.r, selected.c, r, c);
-      selected = null;
 
-      drawBoard();
-
-      setTimeout(() => {
-        if (checkWin(currentPlayer)) {
-          message.textContent =
-            (currentPlayer === "W" ? "White" : "Black") + " wins! 🎉";
-          gameOver = true;
-          resetBtn.style.display = "inline-block";
-        } else {
-          currentPlayer = currentPlayer === "W" ? "B" : "W";
-          turnText.textContent =
-            currentPlayer === "W" ? "White’s Turn" : "Black’s Turn";
-        }
-      }, 30);
-
-      return; // exit early to avoid re-drawing twice
-    }
-    // Clicked an invalid cell → deselect and flash red
-    else {
-      selected = null;
-
-      const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
-      if (cell) {
-        cell.classList.add("invalid");
-        setTimeout(() => cell.classList.remove("invalid"), 300);
-      }
-    }
-  } 
-  // No selection yet → select if it’s the player’s queen
-  else if (cellValue === currentPlayer) {
-    selected = { r, c };
+    drawBoard();
+    if (selected) highlightMoves(selected.r, selected.c);
   }
-
-  drawBoard();
-  if (selected) highlightMoves(selected.r, selected.c);
-}
 
   function highlightMoves(r, c) {
     const dirs = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
