@@ -6,56 +6,113 @@
 <title>Queens – 4 in a Row</title>
 
 <style>
+  :root {
+    --board-size: 360px;
+    --light: #f5f6fa;
+    --dark: #3d3d3d;
+    --accent: #4caf50;
+    --gold: #f5c542;
+  }
+
   body {
     margin: 0;
-    font-family: system-ui, Arial, sans-serif;
-    background: #111;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: radial-gradient(circle at top, #222, #0b0b0b);
     color: white;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   h1 {
-    margin: 10px 0 4px;
+    margin: 14px 0 4px;
+    font-weight: 600;
   }
 
   #turn {
-    margin-bottom: 6px;
-    font-size: 1rem;
+    opacity: 0.9;
+    margin-bottom: 10px;
   }
 
   #board {
+    width: var(--board-size);
+    height: var(--board-size);
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    width: 90vmin;
-    height: 90vmin;
-    max-width: 360px;
-    max-height: 360px;
-    margin: auto;
-    border: 3px solid white;
+    grid-template-rows: repeat(5, 1fr);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    border: 2px solid #555;
   }
 
   .cell {
     display: flex;
-    justify-content: center;
     align-items: center;
-    font-size: 7vmin;
+    justify-content: center;
     user-select: none;
+    transition: background 0.15s ease;
   }
 
-  .light { background: #eee; color: black; }
-  .dark { background: #777; color: black; }
+  .light { background: var(--light); }
+  .dark { background: #9fa0a5; }
 
-  .highlight {
-    background: #4caf50 !important;
+  .cell.highlight {
+    background: var(--accent) !important;
   }
 
-  .selected {
-    outline: 3px solid gold;
+  .cell.selected {
+    box-shadow: inset 0 0 0 3px var(--gold);
+  }
+
+  /* Modern Queen Pieces */
+  .queen {
+    width: 60%;
+    height: 60%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: bold;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+  }
+
+  .whiteQ {
+    background: linear-gradient(145deg, #ffffff, #dcdcdc);
+    color: #111;
+  }
+
+  .blackQ {
+    background: linear-gradient(145deg, #111, #444);
+    color: #fff;
   }
 
   #message {
-    margin-top: 8px;
-    font-size: 1.1rem;
+    margin-top: 12px;
+    font-size: 1.2rem;
+  }
+
+  button {
+    margin-top: 12px;
+    padding: 10px 22px;
+    font-size: 1rem;
+    border-radius: 20px;
+    border: none;
+    background: linear-gradient(145deg, #4caf50, #3c8f40);
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+  }
+
+  button:active {
+    transform: scale(0.96);
+  }
+
+  @media (max-width: 420px) {
+    :root {
+      --board-size: 90vmin;
+    }
   }
 </style>
 </head>
@@ -64,34 +121,41 @@
 
 <h1>👑 Queens</h1>
 <div id="turn">White’s Turn</div>
+
 <div id="board"></div>
+
 <div id="message"></div>
+<button id="resetBtn" onclick="resetGame()" style="display:none;">Reset Game</button>
 
 <script>
   const size = 5;
   const board = document.getElementById("board");
   const turnText = document.getElementById("turn");
   const message = document.getElementById("message");
+  const resetBtn = document.getElementById("resetBtn");
 
   let currentPlayer = "W";
   let selected = null;
+  let gameOver = false;
 
-  let state = Array.from({ length: size }, () => Array(size).fill(null));
+  let state;
 
-  function setupPieces() {
-    // Player 1 (White)
-    state[0][0] = "W"; // a1
-    state[4][1] = "W"; // b5
-    state[0][2] = "W"; // c1
-    state[4][3] = "W"; // d5
-    state[0][4] = "W"; // e1
+  function initState() {
+    state = Array.from({ length: size }, () => Array(size).fill(null));
 
-    // Player 2 (Black)
-    state[4][0] = "B"; // a5
-    state[0][1] = "B"; // b1
-    state[4][2] = "B"; // c5
-    state[0][3] = "B"; // d1
-    state[4][4] = "B"; // e5
+    // White
+    state[0][0] = "W";
+    state[4][1] = "W";
+    state[0][2] = "W";
+    state[4][3] = "W";
+    state[0][4] = "W";
+
+    // Black
+    state[4][0] = "B";
+    state[0][1] = "B";
+    state[4][2] = "B";
+    state[0][3] = "B";
+    state[4][4] = "B";
   }
 
   function drawBoard() {
@@ -104,7 +168,10 @@
         cell.dataset.c = c;
 
         if (state[r][c]) {
-          cell.textContent = state[r][c] === "W" ? "♕" : "♛";
+          const q = document.createElement("div");
+          q.className = "queen " + (state[r][c] === "W" ? "whiteQ" : "blackQ");
+          q.textContent = "Q";
+          cell.appendChild(q);
         }
 
         cell.onclick = () => handleTap(r, c);
@@ -114,120 +181,93 @@
   }
 
   function handleTap(r, c) {
+    if (gameOver) return;
+
     if (selected) {
       if (isValidMove(selected.r, selected.c, r, c)) {
         moveQueen(selected.r, selected.c, r, c);
-        clearSelection();
+        selected = null;
+
         if (checkWin(currentPlayer)) {
           message.textContent =
             (currentPlayer === "W" ? "White" : "Black") + " wins! 🎉";
-          board.style.pointerEvents = "none";
+          gameOver = true;
+          resetBtn.style.display = "inline-block";
           return;
         }
+
         currentPlayer = currentPlayer === "W" ? "B" : "W";
         turnText.textContent =
           currentPlayer === "W" ? "White’s Turn" : "Black’s Turn";
-      } else {
-        clearSelection();
       }
     } else if (state[r][c] === currentPlayer) {
-      selectQueen(r, c);
+      selected = { r, c };
     }
-  }
 
-  function selectQueen(r, c) {
-    selected = { r, c };
     drawBoard();
-    highlightMoves(r, c);
-    getCell(r, c).classList.add("selected");
-  }
-
-  function clearSelection() {
-    selected = null;
-    drawBoard();
-  }
-
-  function getCell(r, c) {
-    return document.querySelector(
-      `.cell[data-r="${r}"][data-c="${c}"]`
-    );
+    if (selected) highlightMoves(selected.r, selected.c);
   }
 
   function highlightMoves(r, c) {
-    const directions = [
-      [1,0], [-1,0], [0,1], [0,-1],
-      [1,1], [1,-1], [-1,1], [-1,-1]
-    ];
-
-    for (const [dr, dc] of directions) {
-      let nr = r + dr;
-      let nc = c + dc;
-      while (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+    dirs.forEach(([dr,dc]) => {
+      let nr=r+dr, nc=c+dc;
+      while (nr>=0 && nr<size && nc>=0 && nc<size) {
         if (state[nr][nc]) break;
-        getCell(nr, nc).classList.add("highlight");
-        nr += dr;
-        nc += dc;
+        document.querySelector(`.cell[data-r="${nr}"][data-c="${nc}"]`)
+          .classList.add("highlight");
+        nr+=dr; nc+=dc;
       }
-    }
+    });
+    document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`)
+      .classList.add("selected");
   }
 
-  function isValidMove(r1, c1, r2, c2) {
+  function isValidMove(r1,c1,r2,c2) {
     if (state[r2][c2]) return false;
+    if (r1!==r2 && c1!==c2 && Math.abs(r2-r1)!==Math.abs(c2-c1)) return false;
 
-    if (
-      r1 !== r2 &&
-      c1 !== c2 &&
-      Math.abs(r2 - r1) !== Math.abs(c2 - c1)
-    ) return false;
-
-    const dr = Math.sign(r2 - r1);
-    const dc = Math.sign(c2 - c1);
-
-    let r = r1 + dr;
-    let c = c1 + dc;
-    while (r !== r2 || c !== c2) {
+    const dr=Math.sign(r2-r1), dc=Math.sign(c2-c1);
+    let r=r1+dr, c=c1+dc;
+    while (r!==r2 || c!==c2) {
       if (state[r][c]) return false;
-      r += dr;
-      c += dc;
+      r+=dr; c+=dc;
     }
     return true;
   }
 
-  function moveQueen(r1, c1, r2, c2) {
-    state[r2][c2] = state[r1][c1];
-    state[r1][c1] = null;
-    drawBoard();
+  function moveQueen(r1,c1,r2,c2) {
+    state[r2][c2]=state[r1][c1];
+    state[r1][c1]=null;
   }
 
-  function checkWin(player) {
-    const directions = [[1,0],[0,1],[1,1],[1,-1]];
-
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        if (state[r][c] !== player) continue;
-
-        for (const [dr, dc] of directions) {
-          let count = 1;
-          let nr = r + dr;
-          let nc = c + dc;
-
-          while (
-            nr >= 0 && nr < size &&
-            nc >= 0 && nc < size &&
-            state[nr][nc] === player
-          ) {
-            count++;
-            if (count === 4) return true;
-            nr += dr;
-            nc += dc;
-          }
+  function checkWin(p) {
+    const dirs=[[1,0],[0,1],[1,1],[1,-1]];
+    for (let r=0;r<size;r++) for (let c=0;c<size;c++) {
+      if (state[r][c]!==p) continue;
+      for (const [dr,dc] of dirs) {
+        let count=1, nr=r+dr, nc=c+dc;
+        while (nr>=0&&nr<size&&nc>=0&&nc<size&&state[nr][nc]===p) {
+          if (++count===4) return true;
+          nr+=dr; nc+=dc;
         }
       }
     }
     return false;
   }
 
-  setupPieces();
+  function resetGame() {
+    gameOver = false;
+    currentPlayer = "W";
+    selected = null;
+    message.textContent = "";
+    resetBtn.style.display = "none";
+    turnText.textContent = "White’s Turn";
+    initState();
+    drawBoard();
+  }
+
+  initState();
   drawBoard();
 </script>
 
