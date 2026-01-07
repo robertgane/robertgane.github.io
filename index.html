@@ -215,6 +215,10 @@
 
       return; // exit early to avoid re-drawing twice
     }
+    // Clicked an invalid cell → deselect
+    else {
+      selected = null;
+    }
   } 
   // No selection yet → select if it’s the player’s queen
   else if (cellValue === currentPlayer) {
