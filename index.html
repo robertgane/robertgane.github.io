@@ -181,20 +181,24 @@
   let state;
 
   function initState() {
-    state = Array.from({ length: size }, () => Array(size).fill(null));
+  state = Array.from({ length: size }, () => Array(size).fill(null));
 
-    state[0][0] = "W";
-    state[4][1] = "W";
-    state[0][2] = "W";
-    state[4][3] = "W";
-    state[0][4] = "W";
+  // White pieces
+  state[0][0] = "W";
+  state[4][1] = "W";
+  state[0][2] = "W";
+  state[4][3] = "W";
+  state[0][4] = "W";
+  state[2][0] = "W"; // a3 ✅
 
-    state[4][0] = "B";
-    state[0][1] = "B";
-    state[4][2] = "B";
-    state[0][3] = "B";
-    state[4][4] = "B";
-  }
+  // Black pieces
+  state[4][0] = "B";
+  state[0][1] = "B";
+  state[4][2] = "B";
+  state[0][3] = "B";
+  state[4][4] = "B";
+  state[2][4] = "B"; // e3 ✅
+}
 
   function drawBoard() {
     board.innerHTML = "";
